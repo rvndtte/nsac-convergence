@@ -249,11 +249,12 @@ export function passportView({ passenger, stations, itemsAt, claims, time, final
           })}
         </ul>
       </section>`)}
-    ${final ? html`
-      <div class="dialog-actions">
-        <button class="button button-primary" type="button" data-action="free-ride">Explore the whole line</button>
-        <button class="button" type="button" data-action="replay">Ride again</button>
-      </div>` : ""}`;
+    <div class="dialog-actions">
+      ${final ? html`<button class="button button-primary" type="button" data-action="free-ride">Explore the whole line</button>` : ""}
+      <button class="button ${final ? "" : "button-primary"}" type="button" data-action="share-card">Save passport card (PNG)</button>
+      ${final ? html`<button class="button" type="button" data-action="replay">Ride again</button>` : ""}
+    </div>
+    <p class="dialog-text" id="share-status" role="status" aria-live="polite"></p>`;
 }
 
 function formatPosition({ lat, lon }) {

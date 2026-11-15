@@ -1,6 +1,8 @@
 import { createAudio } from "./audio.js";
 import { createEphemeris, formatDuration } from "./ephemeris.js";
 import { html } from "./html.js";
+import { playIntro } from "./intro.js";
+import { renderPassportCard } from "./passportcard.js";
 import { getImage, getLatestEarth, loadJson, searchImages } from "./nasa.js";
 import { getCapeCanaveralImage } from "./planetary.js";
 import { bodies } from "./worlds.js";
@@ -36,6 +38,9 @@ const ui = {
   passStops: document.getElementById("pass-stops"),
   passItems: document.getElementById("pass-items"),
   passDate: document.getElementById("pass-date"),
+  countdown: document.getElementById("countdown"),
+  countdownTime: document.getElementById("countdown-time"),
+  countdownSub: document.getElementById("countdown-sub"),
   passEarth: document.getElementById("pass-earth"),
   announcement: document.getElementById("announcement"),
   announcementLabel: document.getElementById("announcement-label"),
@@ -120,12 +125,45 @@ const tagStars = (tag) => Math.max(1, MAX_STARS - (tag.cluesShown - 1) - tag.wro
 function setMode(mode) {
   state.mode = mode;
   syncChrome();
+  if (mode === "boarding") startCountdown();
+  else window.clearInterval(countdownTimer);
+}
+
+/* ---------- Boarding countdown: Voyager 1 reaches one light-day ---------- */
+let countdownTimer = 0;
+
+function startCountdown() {
+  window.clearInterval(countdownTimer);
+  const item = data && itemById.get(finaleId());
+  if (!item?.timeline?.oneLightDay) return;
+  const milestone = Date.parse(item.timeline.oneLightDay);
+  const tick = () => {
+    const seconds = Math.floor((milestone - Date.now()) / 1000);
+    ui.countdown.hidden = false;
+    if (seconds > 0) {
+      const d = Math.floor(seconds / 86400);
+      const h = String(Math.floor((seconds % 86400) / 3600)).padStart(2, "0");
+      const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
+      const s = String(seconds % 60).padStart(2, "0");
+      ui.countdownTime.textContent = `${d}d ${h}h ${m}m ${s}s`;
+      ui.countdownSub.textContent = "The first human-made object a full light-day from Earth · NASA/JPL Horizons";
+    } else {
+      ui.countdownTime.textContent = "Milestone reached";
+      ui.countdownSub.textContent = `Voyager 1 crossed one light-day ${formatDuration(-seconds, { parts: 2 })} ago, and it is still answering.`;
+      window.clearInterval(countdownTimer);
+    }
+  };
+  tick();
+  countdownTimer = window.setInterval(tick, 1000);
 }
 
 function syncChrome() {
   const { mode } = state;
   document.body.dataset.mode = mode;
-  if (data) document.body.dataset.body = currentStation().body;
+  if (data) {
+    document.body.dataset.body = currentStation().body;
+    audio.ambient.mood(currentStation().body);
+  }
   document.body.classList.toggle("is-scanning", mode === "stop" && state.scanning);
   ui.boarding.hidden = mode !== "boarding";
   ui.hud.hidden = mode === "boarding" || mode === "loading";
@@ -627,6 +665,46 @@ function openPassport({ final = false } = {}) {
   if (!ui.passportDialog.open) ui.passportDialog.showModal();
 }
 
+async function sharePassportCard() {
+  const status = ui.passport.querySelector("#share-status");
+  const say = (text) => { if (status) status.textContent = text; };
+  say("Drawing your card…");
+  try {
+    const voyager = itemById.get(finaleId());
+    const km = ephemeris.distanceKm(voyager.location.horizons);
+    const blob = await renderPassportCard({
+      passenger: state.passenger,
+      maxStars: MAX_STARS,
+      rideTime: state.rideEnd > state.rideStart ? formatDuration((state.rideEnd - state.rideStart) / 1000, { parts: 2 }) : null,
+      voyagerLine: `Voyager 1 is ${(km / 1e9).toFixed(2)} billion km from Earth today`,
+      dateText: DATE_FORMAT.format(new Date()),
+      stops: stations().map((station) => ({
+        name: station.name,
+        items: itemsAt(station.id).map((item) => ({ name: item.name, site: item.location.site, stars: state.claims.get(item.id) || 0 }))
+      }))
+    });
+    const file = new File([blob], "lost-and-found-passport.png", { type: "image/png" });
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: "My Lost & Found Line passport" });
+        say("Shared.");
+        return;
+      } catch (error) {
+        if (error?.name === "AbortError") { say(""); return; }
+      }
+    }
+    const url = URL.createObjectURL(blob);
+    const link = Object.assign(document.createElement("a"), { href: url, download: "lost-and-found-passport.png" });
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    say("Saved as lost-and-found-passport.png.");
+  } catch {
+    say("Could not create the card. Please try again.");
+  }
+}
+
 function openEarthWindow() {
   earthWindowReturnFocus = document.activeElement;
   renderEarthWindow();
@@ -780,6 +858,7 @@ const actions = {
   "earth-view": (target) => setEarthWindowView(target.dataset.view),
   "retry-earth-window": retryEarthWindow,
   "close-passport": () => ui.passportDialog.close(),
+  "share-card": sharePassportCard,
   "open-record": (target) => {
     ui.passportDialog.close();
     selectItem(target.dataset.id);
@@ -898,10 +977,19 @@ async function boot() {
   ui.passDate.textContent = DATE_FORMAT.format(new Date());
 
   setMode("boarding");
+  const voyagerTarget = itemById.get(finaleId()).location.horizons;
+  const intro = playIntro({
+    distanceKm: ephemeris.distanceKm(voyagerTarget),
+    lightSeconds: ephemeris.lightSeconds(voyagerTarget),
+    otherCount: data.items.length - 1,
+    dateText: new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" }).format(new Date())
+  });
   loadEarthPhoto();
   scene = await initScene();
   if (scene) await scene.goTo(currentStation().body, { instant: true });
   syncChrome();
+  await intro;
+  ui.passenger?.focus({ preventScroll: true });
 }
 
 boot();
