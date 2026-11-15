@@ -27,7 +27,7 @@ const SYSTEM_RINGS = [
   [173.14, "One light-day", "light-day", 250]
 ];
 
-export function createScene(canvas, { bodies, items, ephemeris, reducedMotion, onFrame }) {
+export function createScene(canvas, { bodies, items, ephemeris, reducedMotion, onFrame, onZoom = () => {} }) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setClearColor(0x04060a, 1);
@@ -69,6 +69,7 @@ export function createScene(canvas, { bodies, items, ephemeris, reducedMotion, o
     drag: null,
     idleSpin: true,
     interactive: false,
+    zoom: 1,
     layout: { top: 0, right: 0, bottom: 0, left: 0, fit: 1.15 },
     distance: 0,
     offsetX: 0,
@@ -161,7 +162,7 @@ export function createScene(canvas, { bodies, items, ephemeris, reducedMotion, o
     }
 
     const { top, right, bottom, left } = state.layout;
-    const distance = fitDistance(view?.fitRadius ?? RADIUS);
+    const distance = fitDistance(view?.fitRadius ?? RADIUS) * state.zoom;
     state.distance = state.distance ? state.distance + (distance - state.distance) * ease : distance;
     state.offsetX += ((left - right) / 2 - state.offsetX) * ease;
     state.offsetY += ((top - bottom) / 2 - state.offsetY) * ease;
@@ -262,6 +263,16 @@ export function createScene(canvas, { bodies, items, ephemeris, reducedMotion, o
   };
   canvas.addEventListener("pointerup", endDrag);
   canvas.addEventListener("pointercancel", endDrag);
+  canvas.addEventListener("wheel", (event) => {
+    if (!state.interactive) return;
+    event.preventDefault();
+    setZoom(state.zoom * Math.exp(event.deltaY * 0.001));
+  }, { passive: false });
+
+  function setZoom(value) {
+    state.zoom = THREE.MathUtils.clamp(value, 0.62, 1.8);
+    onZoom(state.zoom);
+  }
   window.addEventListener("resize", resize);
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) cancelAnimationFrame(frameId);
@@ -279,6 +290,7 @@ export function createScene(canvas, { bodies, items, ephemeris, reducedMotion, o
     goTo(id, { instant = false } = {}) {
       if (!views.has(id)) return Promise.resolve();
       views.get(id).load();
+      setZoom(1);
       if (id === state.body && !state.travel) return Promise.resolve();
       if (instant || reducedMotion || !state.body) {
         state.travel?.resolve();
@@ -322,6 +334,15 @@ export function createScene(canvas, { bodies, items, ephemeris, reducedMotion, o
         state.drag = null;
         canvas.classList.remove("is-dragging");
       }
+    },
+    adjustZoom(factor) {
+      setZoom(state.zoom * factor);
+    },
+    resetZoom() {
+      setZoom(1);
+    },
+    getZoom() {
+      return state.zoom;
     }
   };
 }

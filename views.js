@@ -62,6 +62,7 @@ export function tagView({ item, station, number, total, cluesShown, stars, feedb
       <p class="tag-help">${choices
         ? "Choose the place this tag belongs to."
         : html`Turn the ${body} by dragging, or with the arrow keys, then select the marker this tag belongs to.`}</p>
+      ${station.body === "earth" ? html`<button class="earth-window-trigger" type="button" data-action="open-earth-window"><span aria-hidden="true">◉</span> Open Earth Window <span aria-hidden="true">↗</span><small>From orbit to the launch coast</small></button>` : ""}
       ${choices ? "" : html`<button class="button scanner-button" type="button" data-action="scan" aria-pressed="${scanning}">
         <span class="scanner-button-icon" aria-hidden="true">◎</span>${scanning ? "Switch off signal scanner" : "Tune signal scanner"}
       </button>`}
@@ -81,6 +82,7 @@ export function stationClearedView({ station, nextStation, claimed, total }) {
       <p class="label">Lost property · ${station.name}</p>
       <h2 class="tag-title" id="tag-title" tabindex="-1">${claimed === total ? "Every tag claimed" : "Tags handed back"}</h2>
       <p class="tag-help">${claimed} of ${total} items claimed at this stop. Select any claimed marker to read its record again.</p>
+      ${station.body === "earth" ? html`<button class="earth-window-trigger" type="button" data-action="open-earth-window"><span aria-hidden="true">◉</span> Open Earth Window <span aria-hidden="true">↗</span><small>From orbit to the launch coast</small></button>` : ""}
       <button class="button button-primary" type="button" data-action="ride-on">Ride on to ${nextStation.name}</button>
     </div>`;
 }
@@ -115,6 +117,8 @@ export function recordView(item, { station, stars, claimedOn, footerLabel }) {
     </div>
 
     <p class="record-story">${item.story}</p>
+
+    ${item.id === "vanguard-1" ? html`<button class="earth-window-trigger" type="button" data-action="open-earth-window"><span aria-hidden="true">◉</span> Open Earth Window <span aria-hidden="true">↗</span><small>Explore the coast Vanguard launched from</small></button>` : ""}
 
     <section class="archive" id="record-archive" aria-label="Photos from the NASA archive"></section>
 

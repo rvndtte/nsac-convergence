@@ -7,7 +7,7 @@
     <meta name="description" content="Ride a night line through the solar system and claim the machines NASA left behind, from Vanguard 1 to Voyager 1. Built on live NASA data.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <script type="module" src="app.js"></script>
   </head>
@@ -31,8 +31,9 @@
     </header>
 
     <section class="boarding" id="boarding" aria-labelledby="boarding-title" hidden>
-      <p class="label">NASA Space Apps Challenge 2026 · Abandoned but not Forgotten</p>
+      <p class="label boarding-kicker"><span class="live-dot" aria-hidden="true"></span> A signal from what we left behind · NASA Space Apps 2026</p>
       <h1 id="boarding-title">The Lost &amp; Found Line</h1>
+      <p class="boarding-epigraph">Every machine has a last known place. <em>Some are still calling home.</em></p>
       <p class="lead">
         A night service through the solar system that stops wherever NASA left something behind.
         You ride as a passenger. At every stop the lost-property desk hands you a tag, and you find the machine it belongs to.
@@ -62,10 +63,11 @@
         </div>
         <figure class="pass-earth" id="pass-earth">
           <div class="pass-earth-frame"></div>
-          <figcaption>Loading today's Earth from NASA EPIC…</figcaption>
+          <figcaption>Loading the latest Earth image from NASA EPIC…</figcaption>
         </figure>
         <div class="pass-actions">
           <button class="button button-primary" type="submit">Board the line</button>
+          <button class="link-button" type="button" data-action="open-earth-window">Preview the Earth Window ↗</button>
           <span class="pass-hint">About 8 minutes · 12 tags · sound on</span>
         </div>
       </form>
@@ -79,6 +81,32 @@
 
     <div class="markers" id="markers"></div>
     <div class="landmarks" id="landmarks" aria-hidden="true"></div>
+
+    <div class="window-reticle" id="window-reticle" aria-hidden="true" hidden>
+      <span class="reticle-ring"></span><span class="reticle-center"></span>
+      <span class="reticle-label">WINDOW 1A / TARGET AREA</span>
+    </div>
+    <div class="window-controls" id="window-controls" role="group" aria-label="Window view controls" hidden>
+      <button type="button" data-action="zoom-out" aria-label="Zoom out">−</button>
+      <span id="zoom-level" aria-live="polite">100%</span>
+      <button type="button" data-action="zoom-in" aria-label="Zoom in">+</button>
+      <button class="window-reset" type="button" data-action="reset-view" aria-label="Reset zoom">Reset</button>
+    </div>
+
+    <aside class="mission-hud" id="mission-hud" aria-label="Journey status" hidden>
+      <div class="hud-heading"><span class="hud-eyebrow" id="hud-stop">STOP 01 / 04</span><span class="hud-live"><span class="live-dot" aria-hidden="true"></span> LIVE</span></div>
+      <h2 class="hud-place" id="hud-place">Earth Orbit</h2>
+      <p class="hud-distance" id="hud-distance"></p>
+      <div class="hud-divider"></div>
+      <div class="hud-objective"><span class="label">Current objective</span><strong id="hud-objective">Find the matching marker</strong></div>
+      <div class="hud-progress-row"><span id="hud-count">0 / 1 recovered</span><span id="hud-total">0 / 12 total</span></div>
+      <div class="hud-progress" role="progressbar" aria-label="Items recovered at this stop" aria-valuemin="0" aria-valuemax="1" aria-valuenow="0" id="hud-progress"><span id="hud-progress-fill"></span></div>
+    </aside>
+
+    <div class="claim-flash" id="claim-flash" role="status" aria-live="polite" hidden>
+      <span class="claim-flash-icon" aria-hidden="true">✦</span>
+      <span><small>Record recovered</small><strong id="claim-flash-name"></strong></span>
+    </div>
 
     <div class="scanner" id="scanner" hidden>
       <div class="scanner-dial" aria-hidden="true"><span class="scanner-sweep"></span><span class="scanner-core"></span></div>
@@ -99,6 +127,10 @@
 
     <dialog class="dialog" id="passport-dialog" aria-labelledby="passport-title">
       <div id="passport"></div>
+    </dialog>
+
+    <dialog class="dialog earth-window" id="earth-window-dialog" aria-labelledby="earth-window-title">
+      <div id="earth-window-content"></div>
     </dialog>
 
     <noscript><p class="load-error">The Lost &amp; Found Line needs JavaScript to run.</p></noscript>

@@ -2,6 +2,7 @@ import { createAudio } from "./audio.js";
 import { createEphemeris, formatDuration } from "./ephemeris.js";
 import { html } from "./html.js";
 import { getImage, getLatestEarth, loadJson, searchImages } from "./nasa.js";
+import { getCapeCanaveralImage } from "./planetary.js";
 import { bodies } from "./worlds.js";
 import {
   archiveView, finaleView, freeView, landmarksView, markersView, passportView,
@@ -20,7 +21,7 @@ const DATE_FORMAT = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "s
 const ETA_FORMAT = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-const wideLayout = window.matchMedia("(min-width: 900px)");
+const wideLayout = window.matchMedia("(min-width: 900px), (min-width: 550px) and (max-height: 560px)");
 
 const ui = {
   canvas: document.getElementById("scene"),
@@ -42,6 +43,20 @@ const ui = {
   announcementMeta: document.getElementById("announcement-meta"),
   markers: document.getElementById("markers"),
   landmarks: document.getElementById("landmarks"),
+  reticle: document.getElementById("window-reticle"),
+  windowControls: document.getElementById("window-controls"),
+  zoomLevel: document.getElementById("zoom-level"),
+  hud: document.getElementById("mission-hud"),
+  hudStop: document.getElementById("hud-stop"),
+  hudPlace: document.getElementById("hud-place"),
+  hudDistance: document.getElementById("hud-distance"),
+  hudObjective: document.getElementById("hud-objective"),
+  hudCount: document.getElementById("hud-count"),
+  hudTotal: document.getElementById("hud-total"),
+  hudProgress: document.getElementById("hud-progress"),
+  hudProgressFill: document.getElementById("hud-progress-fill"),
+  claimFlash: document.getElementById("claim-flash"),
+  claimFlashName: document.getElementById("claim-flash-name"),
   scanner: document.getElementById("scanner"),
   scannerBearing: document.getElementById("scanner-bearing"),
   scannerLevel: document.getElementById("scanner-level"),
@@ -52,7 +67,9 @@ const ui = {
   credits: document.getElementById("credits"),
   loadError: document.getElementById("load-error"),
   passportDialog: document.getElementById("passport-dialog"),
-  passport: document.getElementById("passport")
+  passport: document.getElementById("passport"),
+  earthWindowDialog: document.getElementById("earth-window-dialog"),
+  earthWindowContent: document.getElementById("earth-window-content")
 };
 
 const audio = createAudio();
@@ -83,6 +100,9 @@ let markerNodes = new Map();
 let landmarkNodes = new Map();
 let announceTimer = 0;
 let liveTimer = 0;
+let claimFlashTimer = 0;
+const earthWindow = { view: "orbit", epic: null, cape: null, epicStatus: "idle", capeStatus: "idle" };
+let earthWindowReturnFocus = null;
 const heldKeys = new Set();
 
 /* ---------- Lookups ---------- */
@@ -105,7 +125,13 @@ function setMode(mode) {
 function syncChrome() {
   const { mode } = state;
   document.body.dataset.mode = mode;
+  if (data) document.body.dataset.body = currentStation().body;
+  document.body.classList.toggle("is-scanning", mode === "stop" && state.scanning);
   ui.boarding.hidden = mode !== "boarding";
+  ui.hud.hidden = mode === "boarding" || mode === "loading";
+  ui.reticle.hidden = !scene || (mode !== "stop" && mode !== "free");
+  ui.windowControls.hidden = ui.reticle.hidden;
+  ui.zoomLevel.textContent = `${Math.round((scene?.getZoom?.() ?? 1) * 100)}%`;
   ui.tag.hidden = !(mode === "stop" || mode === "free");
   ui.record.hidden = mode !== "record";
   ui.finale.hidden = mode !== "finale";
@@ -153,6 +179,28 @@ function renderRoute() {
     free: state.mode === "free"
   });
   ui.passportCount.textContent = `${state.claims.size}/${data.items.length}`;
+  renderHud();
+}
+
+function renderHud() {
+  if (!data) return;
+  const station = currentStation();
+  const items = itemsAt(station.id);
+  const recovered = items.filter((item) => state.claims.has(item.id)).length;
+  ui.hudStop.textContent = `STOP ${String(state.stationIndex + 1).padStart(2, "0")} / ${String(stations().length).padStart(2, "0")}`;
+  ui.hudPlace.textContent = station.name;
+  ui.hudDistance.textContent = distanceLine(station).split(" · ")[0];
+  ui.hudObjective.textContent = state.mode === "free" ? "Explore the recovered route"
+    : state.mode === "finale" ? "Send a message into the dark"
+      : state.mode === "record" ? "Reading the recovered record"
+      : state.mode === "ride" ? "Approaching the next stop"
+        : recovered === items.length ? "All tags returned at this stop"
+          : `Match tag ${recovered + 1} with a marker`;
+  ui.hudCount.textContent = `${recovered} / ${items.length} recovered`;
+  ui.hudTotal.textContent = `${state.claims.size} / ${data.items.length} total`;
+  ui.hudProgress.setAttribute("aria-valuemax", String(items.length));
+  ui.hudProgress.setAttribute("aria-valuenow", String(recovered));
+  ui.hudProgressFill.style.transform = `scaleX(${recovered / items.length})`;
 }
 
 function renderCredits() {
@@ -180,6 +228,7 @@ function updateMarkerStates() {
 
 function handleFrame(frame) {
   const interactive = INTERACTIVE_MODES.has(state.mode);
+  if (interactive) ui.reticle.style.transform = `translate3d(${frame.center.x.toFixed(1)}px, ${frame.center.y.toFixed(1)}px, 0)`;
 
   frame.markers.forEach((reading, id) => {
     const node = markerNodes.get(id);
@@ -213,6 +262,7 @@ function updateScanner(frame) {
   const locked = target.visible && strength > 0.82;
   ui.scannerLevel.style.transform = `scaleX(${strength.toFixed(3)})`;
   ui.scanner.dataset.lock = String(locked);
+  ui.reticle.dataset.lock = String(locked);
   if (locked && !state.scannerLocked) audio.lock();
   state.scannerLocked = locked;
   if (!target.visible) {
@@ -280,6 +330,8 @@ async function rideTo(index) {
   state.feedback = "";
   state.scanning = false;
   state.scannerLocked = false;
+  ui.reticle.dataset.lock = "false";
+  ui.reticle.dataset.scanning = "false";
   const station = currentStation();
   setMode("ride");
   announce({ label: "Next stop", text: station.name, meta: distanceLine(station) }, { persist: true });
@@ -303,6 +355,8 @@ function nextTag() {
   state.feedback = "";
   state.scanning = false;
   state.scannerLocked = false;
+  ui.reticle.dataset.lock = "false";
+  ui.reticle.dataset.scanning = "false";
   renderTag();
 }
 
@@ -349,6 +403,9 @@ function toggleScanner() {
   if (state.mode !== "stop" || !state.tag || !scene) return;
   state.scanning = !state.scanning;
   state.scannerLocked = false;
+  document.body.classList.toggle("is-scanning", state.scanning);
+  ui.reticle.dataset.scanning = String(state.scanning);
+  ui.reticle.dataset.lock = "false";
   if (state.scanning) audio.reveal();
   ui.scanner.hidden = !state.scanning;
   renderTag();
@@ -381,10 +438,23 @@ function claim(id) {
   state.feedback = "";
   state.scanning = false;
   state.scannerLocked = false;
+  ui.reticle.dataset.scanning = "false";
+  ui.reticle.dataset.lock = "false";
   audio.stamp();
+  showClaimFlash(itemById.get(id).name);
   renderRoute();
   if (id === finaleId()) openFinale(id);
   else openRecord(id, { returnTo: "stop" });
+}
+
+function showClaimFlash(name) {
+  window.clearTimeout(claimFlashTimer);
+  ui.claimFlashName.textContent = name;
+  ui.claimFlash.hidden = false;
+  ui.claimFlash.classList.remove("is-entering");
+  void ui.claimFlash.offsetWidth;
+  ui.claimFlash.classList.add("is-entering");
+  claimFlashTimer = window.setTimeout(() => { ui.claimFlash.hidden = true; }, reducedMotion ? 1400 : 2200);
 }
 
 function rideOn() {
@@ -557,6 +627,97 @@ function openPassport({ final = false } = {}) {
   if (!ui.passportDialog.open) ui.passportDialog.showModal();
 }
 
+function openEarthWindow() {
+  earthWindowReturnFocus = document.activeElement;
+  renderEarthWindow();
+  if (!ui.earthWindowDialog.open) ui.earthWindowDialog.showModal();
+  if (earthWindow.epicStatus === "idle" || earthWindow.epicStatus === "error") loadEarthWindowEpic();
+  if (earthWindow.capeStatus === "idle" || earthWindow.capeStatus === "error") loadEarthWindowCape();
+}
+
+function closeEarthWindow() {
+  ui.earthWindowDialog.close();
+  earthWindowReturnFocus?.focus({ preventScroll: true });
+}
+
+function setEarthWindowView(view) {
+  if (view !== "orbit" && view !== "coast") return;
+  earthWindow.view = view;
+  renderEarthWindow();
+  ui.earthWindowContent.querySelector(`[data-view="${view}"]`)?.focus({ preventScroll: true });
+}
+
+function renderEarthWindow() {
+  const coast = earthWindow.view === "coast";
+  const image = coast ? earthWindow.cape : earthWindow.epic;
+  const status = coast ? earthWindow.capeStatus : earthWindow.epicStatus;
+  const date = image ? DATE_FORMAT.format(new Date(`${image.date}T00:00:00Z`)) : "";
+  ui.earthWindowContent.innerHTML = html`
+    <header class="record-header">
+      <p class="label">Earth Window · two scales, one planet</p>
+      <button class="icon-button" type="button" data-action="close-earth-window" aria-label="Close Earth Window">✕</button>
+    </header>
+    <h2 class="dialog-title" id="earth-window-title">Look closer at home.</h2>
+    <p class="dialog-text">From the whole Earth to the coast where Vanguard 1 began its journey.</p>
+    <div class="earth-window-switch" role="group" aria-label="Earth imagery scale">
+      <button type="button" data-action="earth-view" data-view="orbit" aria-pressed="${!coast}"><span>01 / From afar</span><small>NASA EPIC</small></button>
+      <button type="button" data-action="earth-view" data-view="coast" aria-pressed="${coast}"><span>02 / Launch coast</span><small>ESA Sentinel-2</small></button>
+    </div>
+    <figure class="earth-window-figure" aria-busy="${status === "loading"}">
+      <div class="earth-window-image">
+        ${image ? html`<img src="${image.image}" alt="${coast ? "Recent satellite view of the Cape Canaveral region" : "Full-disc view of Earth from NASA EPIC"}" decoding="async">`
+          : html`<div class="earth-window-placeholder">${status === "error" ? "Signal unavailable" : "Receiving Earth imagery…"}</div>`}
+        <span class="earth-window-coordinate">${coast ? "28.5° N / 80.6° W · CAPE CANAVERAL REGION" : "FULL DISC / APPROX. 1.5 MILLION KM"}</span>
+      </div>
+      <figcaption>
+        <strong>${coast ? "Cape Canaveral, now" : "Earth, from afar"}</strong>
+        <span>${image ? html`${date}${coast && image.cloud !== null ? ` · ${image.cloud.toFixed(1)}% cloud cover across tile` : ""}`
+          : status === "error" ? html`Could not retrieve imagery. <button class="link-button" type="button" data-action="retry-earth-window">Retry</button>` : "Connecting to the image archive…"}</span>
+      </figcaption>
+    </figure>
+    <p class="earth-window-context">${coast
+      ? "A present-day Sentinel-2 view of the Cape Canaveral region. Vanguard 1 launched from Cape Canaveral on 17 March 1958; this image does not show its launch or its location in orbit. The preview covers a satellite tile, not the exact launch pad."
+      : "NASA's EPIC camera photographs the sunlit Earth from DSCOVR. Switch scale to see the modern launch coast from a European Space Agency satellite."}</p>
+    ${coast ? html`<p class="earth-window-credit">Imagery: ESA Sentinel-2 · catalog and preview: Microsoft Planetary Computer.</p>` : ""}
+    <div class="earth-window-sources">
+      <a href="${coast ? image?.source ?? "https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a" : "https://epic.gsfc.nasa.gov/"}" target="_blank" rel="noreferrer">${coast ? "View Sentinel-2 source" : "NASA EPIC"} ↗</a>
+      ${coast ? html`<a href="https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a" target="_blank" rel="noreferrer">About the dataset ↗</a>` : ""}
+    </div>`;
+  const img = ui.earthWindowContent.querySelector(".earth-window-image img");
+  img?.addEventListener("error", () => {
+    img.replaceWith(Object.assign(document.createElement("div"), { className: "earth-window-placeholder", textContent: "Image preview unavailable. Open the source below." }));
+  }, { once: true });
+}
+
+async function loadEarthWindowEpic() {
+  earthWindow.epicStatus = "loading";
+  if (ui.earthWindowDialog.open) renderEarthWindow();
+  try {
+    earthWindow.epic = await getLatestEarth();
+    earthWindow.epicStatus = "ready";
+  } catch {
+    earthWindow.epicStatus = "error";
+  }
+  if (ui.earthWindowDialog.open) renderEarthWindow();
+}
+
+async function loadEarthWindowCape() {
+  earthWindow.capeStatus = "loading";
+  if (ui.earthWindowDialog.open) renderEarthWindow();
+  try {
+    earthWindow.cape = await getCapeCanaveralImage();
+    earthWindow.capeStatus = "ready";
+  } catch {
+    earthWindow.capeStatus = "error";
+  }
+  if (ui.earthWindowDialog.open) renderEarthWindow();
+}
+
+function retryEarthWindow() {
+  if (earthWindow.view === "coast") loadEarthWindowCape();
+  else loadEarthWindowEpic();
+}
+
 function finishRide() {
   state.rideEnd ||= Date.now();
   audio.complete();
@@ -581,6 +742,8 @@ async function freeRideTo(index) {
 
 function replay() {
   ui.passportDialog.close();
+  window.clearTimeout(claimFlashTimer);
+  ui.claimFlash.hidden = true;
   state.claims.clear();
   state.revealed.clear();
   Object.assign(state, { stationIndex: 0, tag: null, feedback: "", postcard: null, scanning: false, scannerLocked: false, rideStart: 0, rideEnd: 0 });
@@ -593,6 +756,10 @@ function toggleSound() {
   const on = audio.toggle();
   ui.soundButton.setAttribute("aria-pressed", String(on));
   ui.soundButton.setAttribute("aria-label", on ? "Sound on" : "Sound off");
+}
+
+function changeZoom(factor) {
+  scene?.adjustZoom?.(factor);
 }
 
 /* ---------- Events ---------- */
@@ -608,6 +775,10 @@ const actions = {
   "retry-archive": () => loadArchive(state.recordId),
   finish: finishRide,
   "open-passport": () => openPassport(),
+  "open-earth-window": openEarthWindow,
+  "close-earth-window": closeEarthWindow,
+  "earth-view": (target) => setEarthWindowView(target.dataset.view),
+  "retry-earth-window": retryEarthWindow,
   "close-passport": () => ui.passportDialog.close(),
   "open-record": (target) => {
     ui.passportDialog.close();
@@ -615,7 +786,10 @@ const actions = {
   },
   "free-ride": startFreeRide,
   replay,
-  sound: toggleSound
+  sound: toggleSound,
+  "zoom-in": () => changeZoom(0.8),
+  "zoom-out": () => changeZoom(1.25),
+  "reset-view": () => scene?.resetZoom?.()
 };
 
 document.addEventListener("click", (event) => {
@@ -634,7 +808,7 @@ document.addEventListener("submit", (event) => {
 });
 
 function isTyping(event) {
-  return event.target.closest?.("input, textarea") || ui.passportDialog.open;
+  return event.target.closest?.("input, textarea") || ui.passportDialog.open || ui.earthWindowDialog.open;
 }
 
 function updateAxis() {
@@ -648,7 +822,7 @@ function updateAxis() {
 }
 
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && state.mode === "record" && !ui.passportDialog.open) {
+  if (event.key === "Escape" && state.mode === "record" && !ui.passportDialog.open && !ui.earthWindowDialog.open) {
     closeRecord();
     return;
   }
@@ -662,6 +836,8 @@ document.addEventListener("keyup", (event) => {
   if (!heldKeys.delete(event.key)) return;
   updateAxis();
 });
+
+ui.earthWindowDialog.addEventListener("close", () => earthWindowReturnFocus?.focus({ preventScroll: true }));
 
 window.addEventListener("blur", () => {
   heldKeys.clear();
@@ -677,8 +853,11 @@ function wait(ms) {
 
 async function initScene() {
   try {
-    const { createScene } = await import("./scene.js");
-    return createScene(ui.canvas, { bodies, items: data.items, ephemeris, reducedMotion, onFrame: handleFrame });
+    const { createScene } = await import("./scene.js?window-lens=1");
+    return createScene(ui.canvas, {
+      bodies, items: data.items, ephemeris, reducedMotion, onFrame: handleFrame,
+      onZoom: (zoom) => { ui.zoomLevel.textContent = `${Math.round(zoom * 100)}%`; }
+    });
   } catch (error) {
     console.warn("3D view unavailable, continuing with lists.", error);
     document.body.classList.add("no-3d");
@@ -689,6 +868,8 @@ async function initScene() {
 async function loadEarthPhoto() {
   try {
     const earth = await getLatestEarth();
+    earthWindow.epic = earth;
+    earthWindow.epicStatus = "ready";
     ui.passEarth.innerHTML = html`
       <div class="pass-earth-frame"><img src="${earth.image}" alt="Earth photographed by NASA's EPIC camera" decoding="async"></div>
       <figcaption>Earth on ${DATE_FORMAT.format(new Date(`${earth.date}T00:00:00Z`))}, photographed by NASA's EPIC camera from about 1.5 million km away.</figcaption>`;
