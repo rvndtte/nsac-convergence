@@ -1,152 +1,106 @@
 <!doctype html>
-<html lang="id">
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#090e18">
-    <meta
-      name="description"
-      content="Jelajahi artefak NASA yang ditinggalkan di Bulan dan Mars melalui cerita misi dan data resmi."
-    >
-    <title>Abandoned but not Forgotten — Galactic Artifact Explorer</title>
+    <title>The Lost &amp; Found Line</title>
+    <meta name="description" content="Ride a night line through the solar system and claim the machines NASA left behind, from Vanguard 1 to Voyager 1. Built on live NASA data.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <script src="app.js" defer></script>
+    <script type="module" src="app.js"></script>
   </head>
-  <body>
-    <a class="skip-link" href="#artifacts" data-i18n="skipLink">Langsung ke artefak</a>
-    <div class="page-shell">
-      <header class="topbar">
-        <a class="brand" href="#" aria-label="Abandoned but not Forgotten home">
-          <span class="brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 40 40" fill="none">
-              <circle cx="20" cy="20" r="15" stroke="currentColor" stroke-width="1.5"/>
-              <ellipse cx="20" cy="20" rx="8" ry="15" stroke="currentColor" stroke-width="1.2"/>
-              <path d="M5.5 20h29M8.2 12.5h23.6M8.2 27.5h23.6" stroke="currentColor" stroke-width="1.2"/>
-              <circle cx="29.5" cy="9.5" r="2.5" fill="#ee9c5d"/>
-            </svg>
-          </span>
-          <span class="brand-copy">
-            <strong>FIELD NOTES</strong>
-            <span>NASA SPACE APPS 2026</span>
-          </span>
-        </a>
-        <nav class="top-nav" aria-label="Main navigation">
-          <a href="#artifacts" data-i18n="navExplore">Jelajahi</a>
-          <a href="#logbook" data-i18n="navLogbook">Buku misi</a>
-          <a href="#sources" data-i18n="navSources">Sumber</a>
-        </nav>
-        <button class="language-switch" id="language-switch" type="button" aria-label="Switch language">
-          <span aria-hidden="true">ID</span>
-          <span class="switch-divider" aria-hidden="true">/</span>
-          <span aria-hidden="true">EN</span>
+  <body data-mode="loading">
+    <canvas id="scene" aria-hidden="true"></canvas>
+
+    <header class="topbar" id="topbar">
+      <p class="wordmark">The Lost &amp; Found Line</p>
+      <nav class="route-nav" aria-label="Route">
+        <ol class="route" id="route"></ol>
+      </nav>
+      <div class="topbar-actions">
+        <button class="text-button" id="passport-button" type="button" data-action="open-passport" hidden>
+          Passport <span class="count" id="passport-count">0/0</span>
         </button>
-      </header>
+        <button class="icon-button" id="sound-button" type="button" data-action="sound" aria-pressed="true" aria-label="Sound on">
+          <svg class="icon-on" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M2 6h2.5L8 3v10L4.5 10H2z" fill="currentColor"/><path d="M10.5 5.5a3.5 3.5 0 0 1 0 5M12.5 3.5a6.3 6.3 0 0 1 0 9" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg>
+          <svg class="icon-off" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M2 6h2.5L8 3v10L4.5 10H2z" fill="currentColor"/><path d="M11 6l4 4M15 6l-4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </header>
 
-      <main>
-        <section class="hero" aria-labelledby="hero-title">
-          <div class="hero-copy">
-            <p class="eyebrow"><span class="status-dot"></span><span data-i18n="eyebrow">ARSIP EKSPLORASI ANTARIKSA</span></p>
-            <h1 id="hero-title" data-i18n="heroTitle">Mereka pergi jauh.<br><em>Jejaknya tertinggal.</em></h1>
-            <p class="hero-description" data-i18n="heroDescription">
-              Setiap benda yang ditinggalkan di dunia lain menyimpan kisah tentang keberanian, rasa ingin tahu, dan manusia yang membangunnya.
-            </p>
-            <a class="primary-link" href="#artifacts">
-              <span data-i18n="heroCta">Mulai penyelidikan</span>
-              <span aria-hidden="true">↗</span>
-            </a>
-            <div class="hero-meta">
-              <span><span class="meta-icon" aria-hidden="true">◉</span><span data-i18n="heroMeta1">3 berkas artefak</span></span>
-              <span><span class="meta-icon" aria-hidden="true">⌖</span><span data-i18n="heroMeta2">Bulan &amp; Mars</span></span>
-              <span><span class="meta-icon" aria-hidden="true">✳</span><span data-i18n="heroMeta3">Data NASA</span></span>
-            </div>
-          </div>
-          <div class="hero-visual" aria-label="Illustration of the Moon and a rover" role="img">
-            <div class="orbit orbit-one"></div>
-            <div class="orbit orbit-two"></div>
-            <div class="planet"></div>
-            <div class="planet-shadow"></div>
-            <div class="star star-one"></div>
-            <div class="star star-two"></div>
-            <div class="star star-three"></div>
-            <div class="coordinate coordinate-top">38° 24' N / 110° 47' E</div>
-            <div class="coordinate coordinate-bottom">SOL 4,248 <span>•</span> MERIDIANI PLANUM</div>
-            <div class="visual-caption"><span data-i18n="visualCaption">CATATAN DARI DUNIA LAIN</span><span>01 — 03</span></div>
-          </div>
-        </section>
+    <section class="boarding" id="boarding" aria-labelledby="boarding-title" hidden>
+      <p class="label">NASA Space Apps Challenge 2026 · Abandoned but not Forgotten</p>
+      <h1 id="boarding-title">The Lost &amp; Found Line</h1>
+      <p class="lead">
+        A night service through the solar system that stops wherever NASA left something behind.
+        You ride as a passenger. At every stop the lost-property desk hands you a tag, and you find the machine it belongs to.
+      </p>
 
-        <section class="archive-section" id="artifacts" aria-labelledby="archive-title">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow section-eyebrow"><span data-i18n="archiveKicker">ARSIP LAPANGAN</span> <span class="heading-rule"></span></p>
-              <h2 id="archive-title" data-i18n="archiveTitle">Pilih sebuah jejak</h2>
-            </div>
-            <p class="section-intro" data-i18n="archiveIntro">Buka berkasnya. Temukan misinya.<br> Dengarkan ceritanya.</p>
+      <form class="pass" id="pass-form">
+        <div class="pass-main">
+          <div class="pass-head">
+            <span class="label">Boarding pass</span>
+            <span class="pass-code">LFL-001</span>
           </div>
-
-          <div class="archive-controls">
-            <div class="filter-group" role="group" aria-label="Filter by location">
-              <button class="filter-button is-active" type="button" data-filter="all" aria-pressed="true" data-i18n="filterAll">Semua berkas <span>03</span></button>
-              <button class="filter-button" type="button" data-filter="mars" aria-pressed="false" data-i18n="filterMars">Mars</button>
-              <button class="filter-button" type="button" data-filter="moon" aria-pressed="false" data-i18n="filterMoon">Bulan</button>
-            </div>
-            <label class="search-box">
-              <span class="search-icon" aria-hidden="true">⌕</span>
-              <span class="visually-hidden" data-i18n="searchLabel">Cari artefak</span>
-              <input id="artifact-search" type="search" data-i18n-placeholder="searchPlaceholder" placeholder="Cari nama atau misi...">
-              <kbd>/</kbd>
-            </label>
+          <label class="pass-field">
+            <span class="label">Passenger</span>
+            <input id="passenger" name="passenger" maxlength="24" placeholder="Your name" autocomplete="nickname">
+          </label>
+          <div class="pass-route">
+            <div><span class="label">From</span><strong>Earth orbit</strong></div>
+            <span class="pass-arrow" aria-hidden="true">→</span>
+            <div><span class="label">To</span><strong>One light-day</strong></div>
           </div>
+          <dl class="pass-meta">
+            <div><dt>Stops</dt><dd id="pass-stops">–</dd></div>
+            <div><dt>Lost items</dt><dd id="pass-items">–</dd></div>
+            <div><dt>Seat</dt><dd>1A window</dd></div>
+            <div><dt>Departs</dt><dd id="pass-date">Today</dd></div>
+          </dl>
+        </div>
+        <figure class="pass-earth" id="pass-earth">
+          <div class="pass-earth-frame"></div>
+          <figcaption>Loading today's Earth from NASA EPIC…</figcaption>
+        </figure>
+        <div class="pass-actions">
+          <button class="button button-primary" type="submit">Board the line</button>
+          <span class="pass-hint">About 8 minutes · 12 tags · sound on</span>
+        </div>
+      </form>
+    </section>
 
-          <div class="artifact-grid" id="artifact-grid" aria-live="polite"></div>
-          <p class="empty-state" id="empty-state" hidden data-i18n="emptyState">Tidak ada berkas yang cocok. Coba kata kunci lain.</p>
-        </section>
+    <section class="announcement" id="announcement" aria-live="polite" hidden>
+      <p class="label" id="announcement-label">From the captain</p>
+      <p class="announcement-text" id="announcement-text"></p>
+      <p class="announcement-meta" id="announcement-meta"></p>
+    </section>
 
-        <section class="logbook-section" id="logbook" aria-labelledby="logbook-title">
-          <div class="logbook-visual">
-            <div class="logbook-stamp" aria-hidden="true"><span>MISSION</span><strong>LOG</strong><span>ARCHIVE</span></div>
-            <div class="logbook-lines" aria-hidden="true"></div>
-            <p class="logbook-visual-note" data-i18n="logbookVisualNote">FIELD JOURNAL<br>ENTRY NO. <span id="entry-number">01</span></p>
-          </div>
-          <article class="logbook-content" id="logbook-content" aria-live="polite">
-            <p class="eyebrow section-eyebrow"><span data-i18n="logbookKicker">BUKU CATATAN MISI</span> <span class="heading-rule"></span></p>
-            <div id="artifact-detail"></div>
-          </article>
-        </section>
+    <div class="markers" id="markers"></div>
+    <div class="landmarks" id="landmarks" aria-hidden="true"></div>
 
-        <section class="sources-section" id="sources" aria-labelledby="sources-title">
-          <div class="sources-heading">
-            <div>
-              <p class="eyebrow section-eyebrow"><span data-i18n="sourcesKicker">BUKTI &amp; REFERENSI</span> <span class="heading-rule"></span></p>
-              <h2 id="sources-title" data-i18n="sourcesTitle">Cerita yang berpijak pada data.</h2>
-            </div>
-            <p data-i18n="sourcesDescription">Fakta misi dan foto pada halaman ini bersumber dari NASA. Narasi bergaya jurnal adalah rekonstruksi kreatif, bukan kutipan atau catatan asli astronaut/rover.</p>
-          </div>
-          <div class="source-links">
-            <a href="https://science.nasa.gov/mission/mars-exploration-rovers-spirit-and-opportunity/" target="_blank" rel="noreferrer">
-              <span><span class="source-number">01</span><strong data-i18n="sourceOpportunity">Mars Exploration Rovers: Spirit and Opportunity</strong></span><span class="external-mark" aria-hidden="true">↗</span>
-            </a>
-            <a href="https://science.nasa.gov/mission/mars-pathfinder/" target="_blank" rel="noreferrer">
-              <span><span class="source-number">02</span><strong data-i18n="sourcePathfinder">Mars Pathfinder</strong></span><span class="external-mark" aria-hidden="true">↗</span>
-            </a>
-            <a href="https://www.nasa.gov/mission/apollo-17/" target="_blank" rel="noreferrer">
-              <span><span class="source-number">03</span><strong data-i18n="sourceApollo">Apollo 17</strong></span><span class="external-mark" aria-hidden="true">↗</span>
-            </a>
-            <a href="https://images.nasa.gov/" target="_blank" rel="noreferrer">
-              <span><span class="source-number">04</span><strong data-i18n="sourceImageLibrary">NASA Image and Video Library</strong></span><span class="external-mark" aria-hidden="true">↗</span>
-            </a>
-            <a href="https://data.nasa.gov/api/3/action/package_show?id=mars-rover-photos-api" target="_blank" rel="noreferrer">
-              <span><span class="source-number">05</span><strong data-i18n="sourceOpenData">NASA Open Data — Mars Rover Photos API</strong></span><span class="external-mark" aria-hidden="true">↗</span>
-            </a>
-          </div>
-          <p class="image-credit" data-i18n="imageCredit">Kredit gambar tercantum pada setiap berkas artefak. Gambar dilayani oleh NASA Image and Video Library.</p>
-        </section>
-      </main>
-
-      <footer class="footer">
-        <a class="footer-brand" href="#">FIELD NOTES <span>✳</span></a>
-        <p data-i18n="footerText">Dibuat untuk para penjelajah kecil yang penuh rasa ingin tahu.</p>
-        <span class="footer-year">NASA SPACE APPS 2026</span>
-      </footer>
+    <div class="scanner" id="scanner" hidden>
+      <div class="scanner-dial" aria-hidden="true"><span class="scanner-sweep"></span><span class="scanner-core"></span></div>
+      <div class="scanner-readout">
+        <span class="label">Lost-property receiver · live bearing</span>
+        <strong id="scanner-bearing" role="status" aria-live="polite">Acquiring signal…</strong>
+        <span class="scanner-track" aria-hidden="true"><span id="scanner-level"></span></span>
+        <span class="scanner-note" id="scanner-note">Turn the world to tune the signal.</span>
+      </div>
     </div>
+
+    <aside class="tag" id="tag" aria-labelledby="tag-title" hidden></aside>
+    <aside class="panel record" id="record" aria-labelledby="record-title" hidden></aside>
+    <aside class="panel finale" id="finale" aria-labelledby="finale-title" hidden></aside>
+
+    <p class="credits" id="credits"></p>
+    <p class="load-error" id="load-error" role="alert" hidden></p>
+
+    <dialog class="dialog" id="passport-dialog" aria-labelledby="passport-title">
+      <div id="passport"></div>
+    </dialog>
+
+    <noscript><p class="load-error">The Lost &amp; Found Line needs JavaScript to run.</p></noscript>
   </body>
 </html>

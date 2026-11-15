@@ -1,88 +1,87 @@
-# Abandoned but not Forgotten
+# The Lost & Found Line
 
-**Storytelling about NASA's Discarded Equipment on the Moon and Mars**
+**Abandoned but not Forgotten: storytelling about NASA's discarded equipment.** Built for NASA Space Apps Challenge 2026.
 
-Website interaktif untuk NASA Space Apps 2026 yang menggabungkan **Galactic Artifact Explorer** dan **Buku Catatan Misi**. Pengunjung menyaring dan memilih berkas artefak, lalu membaca cerita bergaya jurnal beserta fakta dan sumber NASA.
+A night service through the solar system that stops wherever NASA left something behind. You ride as a passenger. At every stop the lost-property desk hands you a tag with clues, and you find the machine it belongs to, out of the window, on real NASA maps. The line ends at Voyager 1, which is not lost at all: it is still answering, and on November 18, 2026 it becomes the first human-made object a full light-day from Earth.
 
-## Fitur
+## How to play
 
-- Tiga berkas artefak: rover Opportunity, Lunar Roving Vehicle Apollo 17, dan rover Sojourner.
-- Filter lokasi (Bulan/Mars), pencarian, serta tampilan detail bergaya logbook.
-- Konten dalam Bahasa Indonesia dan English melalui tombol bahasa.
-- Tata letak responsif untuk desktop dan ponsel.
-- Tautan sumber misi NASA dan kredit foto pada tiap berkas.
+1. **Board.** Fill in your boarding pass. The Earth photo on it is today's image from NASA's EPIC camera, 1.5 million km away.
+2. **Ride.** The line runs Earth Orbit → The Moon → Mars → Deep Space. The captain announces each stop with its real distance from Earth today.
+3. **Claim.** Read the tag's clue, turn the globe (drag or arrow keys), and select the marker it belongs to.
+   - Tune the **signal scanner** for a live bearing and signal strength as you rotate the world. A signal lock means the matching marker is near the center of your view. The scanner does not spend stars or reveal the item's name.
+   - A correct pick stamps your passport and opens the record: the story, a live NASA photo gallery, facts, a myth check, and sources.
+   - Each extra clue or wrong guess costs a star. A wrong guess still tells you what that marker is.
+4. **Finale.** At Voyager 1, watch its distance tick live and send it a postcard that travels at the speed of light (simulated).
+5. **Passport.** See your stamps and stars, then explore the whole line freely or ride again.
 
-Cerita bergaya jurnal adalah rekonstruksi kreatif, bukan catatan asli astronaut atau rover. Fakta misi dan foto diberi sumber terpisah.
+You can skip ahead at any stop. A full ride takes about 8 minutes.
 
-## Menjalankan secara lokal
+## The 12 items
 
-Tidak perlu instalasi dependency atau backend.
+| Stop | Items |
+| --- | --- |
+| Earth Orbit | Vanguard 1 |
+| The Moon | Apollo 11 Laser Ranging Retroreflector, Surveyor 3, Lunar Roving Vehicle (Apollo 17) |
+| Mars | Viking 1 Lander, Sojourner, Spirit, Opportunity, InSight, Ingenuity |
+| Deep Space | Pioneer 10, Voyager 1 |
 
-1. Clone atau unduh repositori.
-2. Buka `index.html` di browser.
+All content lives in [`data/lost-and-found.json`](data/lost-and-found.json). Each item has its position, timeline, four facts, three tag clues, a story, sources, and an image query, plus an optional myth check. Positions marked `approx` are landing sites or estimates rather than exact resting points.
 
-Jika browser membatasi file lokal, jalankan server statis dari folder proyek:
+## NASA data
+
+| Source | Used for | Called from |
+| --- | --- | --- |
+| [NASA Image and Video Library API](https://images.nasa.gov/docs/images.nasa.gov_api_docs.pdf) | Photo gallery in every record | Browser (CORS open, no key) |
+| [NASA EPIC API](https://epic.gsfc.nasa.gov/about/api) | Today's Earth photo on the boarding pass | Browser |
+| [NASA GIBS](https://nasa-gibs.github.io/gibs-api-docs/) WMTS | Earth surface (Blue Marble Next Generation) | Browser |
+| [NASA Moon Trek / Mars Trek](https://trek.nasa.gov/) WMTS | Moon (LRO WAC) and Mars (Viking MDIM 2.1) surfaces | Browser |
+| [NASA/JPL Horizons API](https://ssd-api.jpl.nasa.gov/doc/horizons.html) | Real distances to the Moon, Mars, Pioneer 10 and Voyager 1, and probe positions on the deep-space map | Snapshot script (Horizons has no CORS) |
+
+Horizons data is stored in [`data/ephemeris.json`](data/ephemeris.json) as weekly samples for 2026–2027. The browser interpolates them, so distances tick live. To refresh it:
+
+```bash
+node scripts/fetch-ephemeris.mjs
+```
+
+Not used: the Mars Rover Photos API returned 404, and APOD returned 500 with `DEMO_KEY`, when both were checked on November 15, 2026.
+
+## Run locally
+
+There is no build step, framework, or backend. The page loads JSON with `fetch`, so it must be served over HTTP:
 
 ```bash
 python3 -m http.server 8000
 ```
 
-Kemudian buka <http://localhost:8000>. Foto NASA dimuat dari internet, jadi koneksi internet diperlukan untuk melihatnya.
+Then open <http://localhost:8000>. An internet connection is needed for Three.js (jsDelivr), fonts, and NASA data.
 
-## Teknologi
+## Code layout
 
-HTML, CSS, dan JavaScript murni. Tidak memerlukan build step, framework, maupun backend.
+| File | Role |
+| --- | --- |
+| `index.html` | Page structure: top bar with route, boarding pass, tag, record and finale panels, passport dialog |
+| `styles.css` | Visual system and responsive layout (bottom sheets on phones) |
+| `app.js` | Game controller: boarding → ride → stop → record → finale → passport → free ride |
+| `views.js` | HTML templates. Every interpolated value is escaped by `html.js` |
+| `scene.js` | Three.js: textured globes, Vanguard's Kepler orbit, the log-scale deep-space map, travel streaks |
+| `worlds.js` | How each stop is drawn (tile source, colours, start view, credit) |
+| `nasa.js` | All NASA calls: Image Library, EPIC, GIBS and Trek tile mosaics |
+| `ephemeris.js` | Interpolates the Horizons snapshot into live distances and light times |
+| `audio.js` | Announcement chime, stamp, travel, and send tones via Web Audio (can be muted) |
+| `scripts/fetch-ephemeris.mjs` | Refreshes `data/ephemeris.json` from JPL Horizons |
 
-## Data dan kredit
+## Accessibility
 
-Sumber fakta misi:
+- Markers are labelled buttons; arrow keys turn the globe; `Esc` closes a record; the passport uses the native `<dialog>` element.
+- Captain announcements and tag feedback are announced through live regions.
+- `prefers-reduced-motion` turns off travel animation, idle spin, inertia and transitions.
+- Without WebGL, each tag lists its stop's places as buttons, and free exploration lists its items, so the whole game remains playable.
 
-- [NASA Open Data catalog — Mars Rover Photos API](https://data.nasa.gov/api/3/action/package_show?id=mars-rover-photos-api), referensi dataset publik untuk arsip foto rover Mars.
-- [NASA — Mars Exploration Rovers: Spirit and Opportunity](https://science.nasa.gov/mission/mars-exploration-rovers-spirit-and-opportunity/)
-- [NASA — Mars Pathfinder](https://science.nasa.gov/mission/mars-pathfinder/)
-- [NASA — Apollo 17](https://www.nasa.gov/mission/apollo-17/)
+## Credits and honesty notes
 
-Website ini memakai konten yang telah dikurasi dan tidak memanggil Mars Rover Photos API secara langsung. Foto yang ditampilkan dimuat dari NASA Image and Video Library.
-
-Foto dari NASA Image and Video Library:
-
-- Opportunity — [PIA20285](https://images-assets.nasa.gov/image/PIA20285/collection.json), NASA/JPL-Caltech.
-- Lunar Roving Vehicle — [AS17-146-22367](https://images-assets.nasa.gov/image/as17-146-22367/collection.json), NASA.
-- Sojourner — [PIA00623](https://images-assets.nasa.gov/image/PIA00623/collection.json), NASA/JPL.
-
-Foto dan sumber misi juga dapat dibuka dari bagian **Sumber** dan setiap detail artefak di website.
-
-Contoh produk untuk inspirasi:
-
-- [Contoh produk interaktif](https://sl1nk.com/80sl0s6)
-- [Contoh aplikasi dan logbook](https://sites.google.com/view/contoh-app-dan-logbook/full-page-embed)
-
-## English
-
-An interactive NASA Space Apps 2026 project combining the **Galactic Artifact Explorer** with a **Mission Logbook**. Visitors can filter and select artifact files, then explore journal-style stories alongside mission facts and NASA sources.
-
-### Features
-
-- Three artifact files: the Opportunity rover, Apollo 17's Lunar Roving Vehicle, and the Sojourner rover.
-- Moon/Mars filters, search, and logbook-style artifact details.
-- Indonesian and English content using the language toggle.
-- Responsive layout for desktop and mobile.
-- NASA mission references and photo credits on each artifact file.
-- NASA Open Data catalog reference for the Mars Rover Photos API.
-
-Journal-style stories are creative reconstructions, not actual astronaut or rover logs. Mission facts and photographs are separately sourced.
-
-### Run locally
-
-No dependencies or backend are required. Open `index.html` in a browser. If local-file restrictions apply, run `python3 -m http.server 8000` in the project folder and visit <http://localhost:8000>. An internet connection is needed to load NASA-hosted images.
-
-### Technology
-
-Vanilla HTML, CSS, and JavaScript. No build step, framework, or backend is required.
-
-The site uses curated content and does not call the Mars Rover Photos API at runtime. Displayed photographs are loaded from the NASA Image and Video Library.
-
-### Inspiration
-
-- [Interactive product example](https://sl1nk.com/80sl0s6)
-- [App and logbook examples](https://sites.google.com/view/contoh-app-dan-logbook/full-page-embed)
+- Surfaces: NASA GIBS Blue Marble, NASA Moon Trek (LRO WAC), NASA Mars Trek (Viking MDIM 2.1). Earth photo: NASA EPIC on DSCOVR. Photos: NASA Image and Video Library, each linked to its page.
+- Facts are sourced per item in the data file.
+- The tag clues, stories and captain lines were written for this project from those facts.
+- Vanguard 1 was built by the U.S. Naval Research Laboratory; Project Vanguard moved to NASA in 1958.
+- The postcard to Voyager 1 is a simulation. Real commands go through NASA's Deep Space Network.

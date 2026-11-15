@@ -1,0 +1,782 @@
+{
+  "meta": {
+    "title": "The Lost & Found Line",
+    "description": "Curated records of hardware NASA (and its predecessors) left behind in Earth orbit, on the Moon, on Mars, and in deep space.",
+    "compiled": "2026-11-15",
+    "conventions": {
+      "coordinates": "Planetocentric latitude, east-positive longitude in degrees (0 to 360 on Mars, -180 to 180 on the Moon).",
+      "dates": "ISO 8601, UTC.",
+      "imageMatch": "Regular expression tested against an archive result's title, keywords and description to drop off-topic photos.",
+      "approx": "true when the published position is a landing site or an estimate rather than the object's exact resting point.",
+      "site": "Short place name shown on the map marker before the item is claimed."
+    },
+    "apis": {
+      "images": "https://images-api.nasa.gov/search?q={query}&media_type=image",
+      "imageById": "https://images-api.nasa.gov/search?nasa_id={nasaId}",
+      "epicEarth": "https://epic.gsfc.nasa.gov/api/natural",
+      "epicImage": "https://epic.gsfc.nasa.gov/archive/natural/{yyyy}/{mm}/{dd}/jpg/{image}.jpg",
+      "marsTiles": "https://trek.nasa.gov/tiles/Mars/EQ/Mars_Viking_MDIM21_ClrMosaic_global_232m/1.0.0/default/default028mm/{z}/{row}/{col}.jpg",
+      "moonTiles": "https://trek.nasa.gov/tiles/Moon/EQ/LRO_WAC_Mosaic_Global_303ppd_v02/1.0.0/default/default028mm/{z}/{row}/{col}.jpg",
+      "horizons": "https://ssd.jpl.nasa.gov/api/horizons.api (no CORS; snapshot via scripts/fetch-ephemeris.mjs into data/ephemeris.json)"
+    }
+  },
+  "route": [
+    {
+      "id": "earth-orbit",
+      "name": "Earth Orbit",
+      "body": "earth",
+      "announcement": "First stop, low Earth orbit. Mind the gap between you and the oldest satellite still up here.",
+      "items": [
+        "vanguard-1"
+      ]
+    },
+    {
+      "id": "moon",
+      "name": "The Moon",
+      "body": "moon",
+      "horizons": "moon",
+      "announcement": "Now arriving at the Moon. Three missions left something behind on this side.",
+      "items": [
+        "apollo-11-lrrr",
+        "surveyor-3",
+        "apollo-17-lrv"
+      ]
+    },
+    {
+      "id": "mars",
+      "name": "Mars",
+      "body": "mars",
+      "horizons": "mars",
+      "announcement": "Mars, all change. Six machines are parked here, and none of them are coming home.",
+      "items": [
+        "viking-1",
+        "sojourner",
+        "spirit",
+        "opportunity",
+        "insight",
+        "ingenuity"
+      ]
+    },
+    {
+      "id": "deep-space",
+      "name": "Deep Space",
+      "body": "space",
+      "announcement": "Final stretch. Past here there are no more stations, only the two that kept going.",
+      "items": [
+        "pioneer-10",
+        "voyager-1"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "id": "vanguard-1",
+      "name": "Vanguard 1",
+      "kind": "Satellite",
+      "status": "silent",
+      "location": {
+        "body": "earth",
+        "site": "Earth orbit",
+        "label": "Elliptical Earth orbit, about 660 × 3,900 km",
+        "orbit": {
+          "perigeeKm": 657,
+          "apogeeKm": 3935,
+          "inclinationDeg": 34.25
+        },
+        "approx": true
+      },
+      "timeline": {
+        "launched": "1958-03-17",
+        "lastContact": "1964"
+      },
+      "facts": [
+        [
+          "Launched",
+          "March 17, 1958"
+        ],
+        [
+          "Size",
+          "16.5 cm sphere, about 1.5 kg"
+        ],
+        [
+          "First",
+          "Satellite to run on solar power"
+        ],
+        [
+          "Status",
+          "Silent since 1964, still in orbit"
+        ]
+      ],
+      "claimTag": [
+        "Small enough to hold in two hands",
+        "Six antennas, no engine",
+        "Older than NASA's own logo"
+      ],
+      "story": "The oldest human-made object still in orbit. It stopped talking in 1964 but its orbit is so high that it should keep circling for centuries.",
+      "note": "Built by the U.S. Naval Research Laboratory. Project Vanguard was transferred to NASA when the agency was founded in 1958.",
+      "images": {
+        "query": "Vanguard",
+        "match": "Vanguard (1|SLV)|Vangard|Vanguard room"
+      },
+      "featured": {
+        "nasaId": "58PD-06149A"
+      },
+      "sources": [
+        {
+          "title": "Vanguard 1 (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Vanguard_1"
+        },
+        {
+          "title": "Astronomy: Earth's oldest artificial satellite that's still in orbit",
+          "url": "https://www.astronomy.com/space-exploration/vanguard-1-earths-oldest-artificial-satellite-thats-still-in-orbit/"
+        }
+      ]
+    },
+    {
+      "id": "apollo-11-lrrr",
+      "name": "Apollo 11 Laser Ranging Retroreflector",
+      "kind": "Science experiment",
+      "status": "still-working",
+      "location": {
+        "body": "moon",
+        "site": "Tranquility Base",
+        "lat": 0.67409,
+        "lon": 23.47298,
+        "label": "Tranquility Base, Mare Tranquillitatis",
+        "approx": false
+      },
+      "timeline": {
+        "launched": "1969-07-16",
+        "arrived": "1969-07-20",
+        "deployed": "1969-07-21"
+      },
+      "facts": [
+        [
+          "Deployed",
+          "July 21, 1969"
+        ],
+        [
+          "Panel",
+          "About 60 cm wide, 100 mirrors"
+        ],
+        [
+          "Used for",
+          "Measuring the Earth–Moon distance by laser"
+        ],
+        [
+          "Status",
+          "Still returning laser pulses"
+        ]
+      ],
+      "claimTag": [
+        "Has no power and needs none",
+        "One hundred mirrors facing home",
+        "Observatories still aim lasers at it"
+      ],
+      "story": "Most of what Apollo 11 left behind is junk. This is the exception: a passive mirror array that observatories still bounce lasers off, which is how we know the Moon drifts about 3.8 cm farther away each year.",
+      "images": {
+        "query": "Apollo 11 laser",
+        "match": "EASEP|Early Apollo Scientific"
+      },
+      "featured": {
+        "nasaId": "as11-37-5551"
+      },
+      "sources": [
+        {
+          "title": "JPL: Apollo 11 experiment still going strong after 35 years",
+          "url": "https://www.jpl.nasa.gov/news/apollo-11-experiment-still-going-strong-after-35-years/"
+        },
+        {
+          "title": "Apollo Lunar Surface Journal: site coordinates",
+          "url": "https://www.nasa.gov/wp-content/uploads/static/history/alsj/alsjcoords.html"
+        }
+      ]
+    },
+    {
+      "id": "surveyor-3",
+      "name": "Surveyor 3",
+      "kind": "Robotic lander",
+      "status": "silent",
+      "location": {
+        "body": "moon",
+        "site": "Surveyor crater",
+        "lat": -3.016,
+        "lon": -23.418,
+        "label": "Surveyor crater, Oceanus Procellarum",
+        "approx": true
+      },
+      "timeline": {
+        "launched": "1967-04-17",
+        "arrived": "1967-04-20",
+        "visited": "1969-11-20"
+      },
+      "facts": [
+        [
+          "Landed",
+          "April 20, 1967"
+        ],
+        [
+          "Visited",
+          "November 20, 1969, by Apollo 12"
+        ],
+        [
+          "Distance to Apollo 12",
+          "About 180 m"
+        ],
+        [
+          "Returned to Earth",
+          "TV camera, scoop, cables and tubing"
+        ]
+      ],
+      "claimTag": [
+        "Had visitors two and a half years after it landed",
+        "Is missing its camera",
+        "Three legs, parked on a crater wall"
+      ],
+      "story": "The only robot on the Moon that humans went back to see. Pete Conrad landed Apollo 12 within walking distance, and he and Alan Bean cut parts off it to study how hardware ages on the lunar surface.",
+      "myth": {
+        "claim": "Earth bacteria survived two and a half years on the Moon inside Surveyor 3's camera.",
+        "truth": "Streptococcus was found in the returned camera, but later reviews point to contamination after it came back to Earth."
+      },
+      "images": {
+        "query": "Surveyor 3 Apollo 12",
+        "match": "surveyor"
+      },
+      "sources": [
+        {
+          "title": "JPL: Surveyor 3 camera returned from the Moon",
+          "url": "https://www.jpl.nasa.gov/blog/2012/1/surveyor-3-camera-returned-from-the-moon"
+        },
+        {
+          "title": "Space.com: where are the Surveyor 3 parts retrieved by Apollo 12?",
+          "url": "https://www.space.com/apollo-12-surveyor-3-parts-50-years.html"
+        }
+      ]
+    },
+    {
+      "id": "apollo-17-lrv",
+      "name": "Lunar Roving Vehicle (Apollo 17)",
+      "kind": "Crewed rover",
+      "status": "silent",
+      "location": {
+        "body": "moon",
+        "site": "Taurus-Littrow",
+        "lat": 20.1911,
+        "lon": 30.7723,
+        "label": "Taurus-Littrow valley",
+        "approx": true
+      },
+      "timeline": {
+        "launched": "1972-12-07",
+        "arrived": "1972-12-11",
+        "lastUsed": "1972-12-14"
+      },
+      "facts": [
+        [
+          "Landed",
+          "December 11, 1972"
+        ],
+        [
+          "Crew",
+          "Gene Cernan and Harrison Schmitt"
+        ],
+        [
+          "Distance driven",
+          "About 36 km"
+        ],
+        [
+          "Mass",
+          "About 210 kg"
+        ]
+      ],
+      "claimTag": [
+        "Four wheels made of woven wire",
+        "Last parked by the last person on the Moon",
+        "Its camera filmed the crew leaving"
+      ],
+      "story": "The crew parked it so its TV camera could film their lift-off. It is the last of the three rovers driven on the Moon, and nobody has driven anything there since.",
+      "images": {
+        "query": "Apollo 17 lunar roving vehicle",
+        "match": "rov"
+      },
+      "featured": {
+        "nasaId": "as17-146-22367"
+      },
+      "sources": [
+        {
+          "title": "NASA: Apollo 17",
+          "url": "https://www.nasa.gov/mission/apollo-17/"
+        },
+        {
+          "title": "NSSDC: Apollo landing site coordinates",
+          "url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html"
+        }
+      ]
+    },
+    {
+      "id": "viking-1",
+      "name": "Viking 1 Lander",
+      "kind": "Robotic lander",
+      "status": "silent",
+      "location": {
+        "body": "mars",
+        "site": "Chryse Planitia",
+        "lat": 22.7,
+        "lon": 311.78,
+        "label": "Western Chryse Planitia",
+        "approx": true
+      },
+      "timeline": {
+        "launched": "1975-08-20",
+        "arrived": "1976-07-20",
+        "lastContact": "1982-11-11"
+      },
+      "facts": [
+        [
+          "Landed",
+          "July 20, 1976"
+        ],
+        [
+          "First",
+          "U.S. spacecraft to land and work on Mars"
+        ],
+        [
+          "Worked for",
+          "More than six years"
+        ],
+        [
+          "Last contact",
+          "November 11, 1982"
+        ]
+      ],
+      "claimTag": [
+        "Landed seven years to the day after Apollo 11",
+        "Searched the soil for life",
+        "Lost because of one wrong command"
+      ],
+      "story": "Viking 1 sent back the first clear photos from the surface of Mars and ran for more than six years. It went silent after a software update accidentally overwrote the code that pointed its antenna at Earth.",
+      "images": {
+        "query": "Viking 1 lander Mars surface",
+        "match": "viking"
+      },
+      "sources": [
+        {
+          "title": "NASA Science: Viking 1",
+          "url": "https://science.nasa.gov/mission/viking-1"
+        },
+        {
+          "title": "JPL: attempts to communicate with Viking Lander 1 concluded",
+          "url": "https://www.jpl.nasa.gov/news/attempts-to-communicate-to-viking-lander-1-concluded/"
+        }
+      ]
+    },
+    {
+      "id": "sojourner",
+      "name": "Sojourner",
+      "kind": "Robotic rover",
+      "status": "silent",
+      "location": {
+        "body": "mars",
+        "site": "Ares Vallis",
+        "lat": 19.13,
+        "lon": 326.78,
+        "label": "Ares Vallis",
+        "approx": true
+      },
+      "timeline": {
+        "launched": "1996-12-04",
+        "arrived": "1997-07-04",
+        "lastContact": "1997-09-27"
+      },
+      "facts": [
+        [
+          "Landed",
+          "July 4, 1997"
+        ],
+        [
+          "Planned mission",
+          "7 sols"
+        ],
+        [
+          "Mass",
+          "10.6 kg"
+        ],
+        [
+          "Last contact",
+          "September 27, 1997"
+        ]
+      ],
+      "claimTag": [
+        "About the size of a microwave oven",
+        "The first wheels to roll on another planet",
+        "Talked to Earth through its lander"
+      ],
+      "story": "The first rover on another planet. It was planned to last a week and kept working for nearly three months, until its lander and radio link went quiet.",
+      "images": {
+        "query": "Sojourner rover",
+        "match": "sojourner"
+      },
+      "featured": {
+        "nasaId": "PIA00623"
+      },
+      "sources": [
+        {
+          "title": "NASA Science: Mars Pathfinder",
+          "url": "https://science.nasa.gov/mission/mars-pathfinder/"
+        }
+      ]
+    },
+    {
+      "id": "spirit",
+      "name": "Spirit",
+      "kind": "Robotic rover",
+      "status": "silent",
+      "location": {
+        "body": "mars",
+        "site": "Gusev crater",
+        "lat": -14.6,
+        "lon": 175.5,
+        "label": "Troy, west of Home Plate, Gusev crater",
+        "approx": true
+      },
+      "timeline": {
+        "launched": "2003-06-10",
+        "arrived": "2004-01-04",
+        "stuck": "2009-05",
+        "lastContact": "2010-03-22",
+        "ended": "2011-05-25"
+      },
+      "facts": [
+        [
+          "Landed",
+          "January 4, 2004"
+        ],
+        [
+          "Planned mission",
+          "90 sols"
+        ],
+        [
+          "Stuck",
+          "Soft soil at Troy, 2009"
+        ],
+        [
+          "Last contact",
+          "March 22, 2010"
+        ]
+      ],
+      "claimTag": [
+        "Drove backwards for years on a broken wheel",
+        "Got stuck in soft sand",
+        "Opportunity's twin"
+      ],
+      "story": "Spirit dragged a dead front wheel for years. The furrow it dug turned up nearly pure silica, a sign of ancient hot springs. Then it bogged down in soft sand at a place called Troy and spent its last winter there.",
+      "images": {
+        "query": "Spirit rover Gusev",
+        "match": "spirit"
+      },
+      "sources": [
+        {
+          "title": "NASA Science: Mars Exploration Rover Spirit",
+          "url": "https://science.nasa.gov/missions/mars-exploration-rover-spirit"
+        },
+        {
+          "title": "NASA Technical Reports: Spirit end of mission",
+          "url": "https://ntrs.nasa.gov/citations/20160001767"
+        }
+      ]
+    },
+    {
+      "id": "opportunity",
+      "name": "Opportunity",
+      "kind": "Robotic rover",
+      "status": "silent",
+      "location": {
+        "body": "mars",
+        "site": "Endeavour crater",
+        "lat": -2.2,
+        "lon": 354.5,
+        "label": "Perseverance Valley, Endeavour crater",
+        "approx": true
+      },
+      "timeline": {
+        "launched": "2003-07-07",
+        "arrived": "2004-01-25",
+        "lastContact": "2018-06-10",
+        "ended": "2019-02-13"
+      },
+      "facts": [
+        [
+          "Landed",
+          "January 25, 2004"
+        ],
+        [
+          "Planned mission",
+          "90 sols"
+        ],
+        [
+          "Distance driven",
+          "45.16 km"
+        ],
+        [
+          "Last contact",
+          "June 10, 2018"
+        ]
+      ],
+      "claimTag": [
+        "Planned for 90 days, lasted almost 15 years",
+        "Drove farther than a marathon",
+        "Lost to a planet-wide dust storm"
+      ],
+      "story": "A 90-day mission that ran for almost fifteen years and drove more than a marathon. A global dust storm blotted out the Sun over its solar panels in June 2018, and it never woke up.",
+      "myth": {
+        "claim": "Opportunity's last words were \"My battery is low and it's getting dark.\"",
+        "truth": "That line is a reporter's poetic summary. The real final downlink was engineering data showing almost no power and a very dark sky."
+      },
+      "images": {
+        "query": "Opportunity rover",
+        "match": "opportunity"
+      },
+      "featured": {
+        "nasaId": "PIA20285"
+      },
+      "sources": [
+        {
+          "title": "NASA Science: Mars Exploration Rovers Spirit and Opportunity",
+          "url": "https://science.nasa.gov/mission/mars-exploration-rovers-spirit-and-opportunity/"
+        },
+        {
+          "title": "Snopes: Opportunity's final words",
+          "url": "https://www.snopes.com/fact-check/opportunity-rovers-final-words/"
+        }
+      ]
+    },
+    {
+      "id": "insight",
+      "name": "InSight",
+      "kind": "Robotic lander",
+      "status": "silent",
+      "location": {
+        "body": "mars",
+        "site": "Elysium Planitia",
+        "lat": 4.502,
+        "lon": 135.623,
+        "label": "Elysium Planitia",
+        "approx": false
+      },
+      "timeline": {
+        "launched": "2018-05-05",
+        "arrived": "2018-11-26",
+        "lastContact": "2022-12-15",
+        "ended": "2022-12-21"
+      },
+      "facts": [
+        [
+          "Landed",
+          "November 26, 2018"
+        ],
+        [
+          "Marsquakes detected",
+          "1,319"
+        ],
+        [
+          "Cause of end",
+          "Dust on its solar panels"
+        ],
+        [
+          "Last contact",
+          "December 15, 2022"
+        ]
+      ],
+      "claimTag": [
+        "Listened to the inside of a planet",
+        "Had a seismometer under a dome",
+        "Ran out of power slowly, one dust layer at a time"
+      ],
+      "story": "InSight sat in one place and listened. Its seismometer recorded 1,319 marsquakes, including meteoroid impacts, and mapped the planet's crust, mantle and core before dust slowly choked its solar panels.",
+      "images": {
+        "query": "InSight lander Mars",
+        "match": "insight"
+      },
+      "sources": [
+        {
+          "title": "NASA: InSight's final location on Mars",
+          "url": "https://science.nasa.gov/resource/insights-final-location-on-mars/"
+        },
+        {
+          "title": "Astronomy: NASA pulls plug on Mars InSight lander",
+          "url": "https://www.astronomy.com/science/nasa-pulls-plug-on-mars-insight-lander-ending-4-year-mission/"
+        }
+      ]
+    },
+    {
+      "id": "ingenuity",
+      "name": "Ingenuity",
+      "kind": "Helicopter",
+      "status": "silent",
+      "location": {
+        "body": "mars",
+        "site": "Jezero crater",
+        "lat": 18.45,
+        "lon": 77.45,
+        "label": "\"Valinor Hills\", Neretva Vallis, Jezero crater",
+        "approx": true
+      },
+      "timeline": {
+        "launched": "2020-07-30",
+        "arrived": "2021-02-18",
+        "firstFlight": "2021-04-19",
+        "lastFlight": "2024-01-18"
+      },
+      "facts": [
+        [
+          "First flight",
+          "April 19, 2021"
+        ],
+        [
+          "Flights",
+          "72 (5 were planned)"
+        ],
+        [
+          "Time in the air",
+          "About 128.8 minutes"
+        ],
+        [
+          "Distance flown",
+          "About 17 km"
+        ]
+      ],
+      "claimTag": [
+        "Planned for 5 flights, made 72",
+        "Broke its rotor blades on its last landing",
+        "Its resting place is named after Tolkien's Undying Lands"
+      ],
+      "story": "The first aircraft to fly on another planet. It was supposed to make five test hops and instead made 72 flights. On flight 72 it lost track of the featureless sand, damaged its rotors on landing and stayed where it came down.",
+      "images": {
+        "query": "Ingenuity Mars helicopter",
+        "match": "ingenuity"
+      },
+      "sources": [
+        {
+          "title": "JPL: Ingenuity's flight map, 72 flights on Mars",
+          "url": "https://www.jpl.nasa.gov/videos/see-ingenuitys-flight-map-72-helicopter-flights-on-mars/"
+        },
+        {
+          "title": "NASA Science: farewell to our flying friend",
+          "url": "https://science.nasa.gov/blogs/farewell-to-our-flying-friend-and-closing-in-on-the-crater-rim"
+        }
+      ]
+    },
+    {
+      "id": "pioneer-10",
+      "name": "Pioneer 10",
+      "kind": "Deep-space probe",
+      "status": "silent",
+      "location": {
+        "body": "space",
+        "site": "Toward Aldebaran",
+        "label": "Heading toward Aldebaran in Taurus",
+        "horizons": "pioneer-10"
+      },
+      "timeline": {
+        "launched": "1972-03-03",
+        "jupiter": "1973-12-03",
+        "lastTelemetry": "2002-04-27",
+        "lastContact": "2003-01-23"
+      },
+      "facts": [
+        [
+          "Launched",
+          "March 3, 1972"
+        ],
+        [
+          "First",
+          "To cross the asteroid belt and fly past Jupiter"
+        ],
+        [
+          "Last signal",
+          "January 23, 2003"
+        ],
+        [
+          "Next star",
+          "Aldebaran, in about two million years"
+        ]
+      ],
+      "claimTag": [
+        "Carries a picture of us on a gold plaque",
+        "Its last signal came from about 12 billion km away",
+        "Going to Aldebaran, very slowly"
+      ],
+      "story": "Pioneer 10 showed that a spacecraft could cross the asteroid belt and survive Jupiter. Its last faint signal came in 2003. It still carries a plaque showing who sent it and where from.",
+      "images": {
+        "query": "Pioneer 10",
+        "match": "pioneer"
+      },
+      "sources": [
+        {
+          "title": "NASA Science: Pioneer 10",
+          "url": "https://science.nasa.gov/mission/pioneer-10"
+        },
+        {
+          "title": "NASA Science: Pioneer 10 sends last signal",
+          "url": "https://science.nasa.gov/missions/pioneer/pioneer-10-sends-last-signal/"
+        }
+      ]
+    },
+    {
+      "id": "voyager-1",
+      "name": "Voyager 1",
+      "kind": "Deep-space probe",
+      "status": "still-working",
+      "location": {
+        "body": "space",
+        "site": "Interstellar space",
+        "label": "Interstellar space",
+        "horizons": "voyager-1"
+      },
+      "timeline": {
+        "launched": "1977-09-05",
+        "paleBlueDot": "1990-02-14",
+        "interstellar": "2012-08-25",
+        "oneLightDay": "2026-11-18T10:16:07Z"
+      },
+      "facts": [
+        [
+          "Launched",
+          "September 5, 1977"
+        ],
+        [
+          "Interstellar space",
+          "Since August 25, 2012"
+        ],
+        [
+          "Instruments still on",
+          "2 of 10"
+        ],
+        [
+          "One light-day from Earth",
+          "November 18, 2026"
+        ]
+      ],
+      "claimTag": [
+        "Not lost. Still answering.",
+        "A message to it takes a whole day",
+        "Carries a golden record of Earth's sounds"
+      ],
+      "story": "Voyager 1 is not abandoned. It is the farthest human-made object and it still answers. On November 18, 2026 it becomes the first one a full light-day away: a command sent from Earth takes 24 hours to reach it.",
+      "images": {
+        "query": "Voyager 1",
+        "match": "voyager"
+      },
+      "sources": [
+        {
+          "title": "NASA SVS: Voyager 1 one light-day visualization",
+          "url": "https://svs.gsfc.nasa.gov/15120/"
+        },
+        {
+          "title": "CNN: Voyager 1 will reach one light-day from Earth in 2026",
+          "url": "https://www.cnn.com/2025/12/09/science/voyager-1-light-day-earth"
+        }
+      ]
+    }
+  ]
+}
