@@ -82,7 +82,9 @@ const state = {
   mode: "loading",
   passenger: "Passenger",
   stationIndex: 0,
+  furthestStationIndex: 0,
   tag: null,
+  stationProgress: new Map(),
   feedback: "",
   claims: new Map(),
   revealed: new Set(),
@@ -212,9 +214,10 @@ function renderRoute() {
   ui.route.innerHTML = routeView({
     stations: stations(),
     currentIndex: state.stationIndex,
+    furthestIndex: state.furthestStationIndex,
     claims: state.claims,
     itemsAt,
-    free: state.mode === "free"
+    canNavigate: state.mode === "stop" || state.mode === "finale" || state.mode === "free"
   });
   ui.passportCount.textContent = `${state.claims.size}/${data.items.length}`;
   renderHud();
@@ -363,7 +366,12 @@ function board(event) {
 }
 
 async function rideTo(index) {
+  const previousStation = currentStation();
+  if (state.mode === "stop" && state.tag) {
+    state.stationProgress.set(previousStation.id, { tag: state.tag, feedback: state.feedback });
+  }
   state.stationIndex = index;
+  state.furthestStationIndex = Math.max(state.furthestStationIndex, index);
   state.tag = null;
   state.feedback = "";
   state.scanning = false;
@@ -381,16 +389,28 @@ async function rideTo(index) {
   if (state.mode !== "ride" || state.stationIndex !== index) return;
 
   itemsAt(station.id).forEach((item) => loadArchive(item.id));
-  setMode("stop");
   audio.chime();
   announce({ label: `Now arriving · ${station.name}`, text: station.announcement, meta: distanceLine(station) });
+  if (index === data.route.length - 1 && state.claims.has(finaleId())) {
+    openFinale(finaleId());
+    return;
+  }
+  setMode("stop");
   nextTag();
 }
 
 function nextTag() {
-  const item = itemsAt(currentStation().id).find((entry) => !state.claims.has(entry.id));
-  state.tag = item ? { itemId: item.id, cluesShown: 1, wrong: new Set() } : null;
-  state.feedback = "";
+  const station = currentStation();
+  const item = itemsAt(station.id).find((entry) => !state.claims.has(entry.id));
+  const progress = state.stationProgress.get(station.id);
+  if (item && progress?.tag.itemId === item.id) {
+    state.tag = progress.tag;
+    state.feedback = progress.feedback;
+  } else {
+    state.tag = item ? { itemId: item.id, cluesShown: 1, wrong: new Set() } : null;
+    state.feedback = "";
+    state.stationProgress.delete(station.id);
+  }
   state.scanning = false;
   state.scannerLocked = false;
   ui.reticle.dataset.lock = "false";
@@ -472,6 +492,7 @@ function selectItem(id) {
 
 function claim(id) {
   state.claims.set(id, tagStars(state.tag));
+  state.stationProgress.delete(currentStation().id);
   state.tag = null;
   state.feedback = "";
   state.scanning = false;
@@ -591,7 +612,11 @@ function selectPhoto(index) {
 function openFinale(id) {
   const item = itemById.get(id);
   ui.finale.innerHTML = finaleView(item, { stars: state.claims.get(id) });
-  state.postcard = null;
+  if (state.postcard) {
+    ui.finale.querySelector("#postcard-form").hidden = true;
+    ui.finale.querySelector("#postcard-status").hidden = false;
+    setText("#postcard-quote", `“${state.postcard.text}” — ${state.passenger}`);
+  }
   setMode("finale");
   startLive();
   ui.finale.querySelector("#finale-title")?.focus({ preventScroll: true });
@@ -824,7 +849,8 @@ function replay() {
   ui.claimFlash.hidden = true;
   state.claims.clear();
   state.revealed.clear();
-  Object.assign(state, { stationIndex: 0, tag: null, feedback: "", postcard: null, scanning: false, scannerLocked: false, rideStart: 0, rideEnd: 0 });
+  state.stationProgress.clear();
+  Object.assign(state, { stationIndex: 0, furthestStationIndex: 0, tag: null, feedback: "", postcard: null, scanning: false, scannerLocked: false, rideStart: 0, rideEnd: 0 });
   window.clearInterval(liveTimer);
   scene?.goTo(currentStation().body);
   setMode("boarding");
@@ -843,7 +869,9 @@ function changeZoom(factor) {
 /* ---------- Events ---------- */
 
 const actions = {
-  station: (target) => freeRideTo(Number(target.dataset.index)),
+  station: (target) => state.mode === "free"
+    ? freeRideTo(Number(target.dataset.index))
+    : rideTo(Number(target.dataset.index)),
   clue: showClue,
   scan: toggleScanner,
   choose: (target) => selectItem(target.dataset.id),
