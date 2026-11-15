@@ -19,7 +19,7 @@ A night service through the solar system that stops wherever NASA left something
 4. **Finale.** At Voyager 1, watch its distance tick live and send it a postcard that travels at the speed of light (simulated).
 5. **Passport.** See your stamps and stars, then explore the whole line freely or ride again.
 
-You can skip ahead at any stop. A full ride takes about 8 minutes.
+You can skip ahead at any stop, and return to any stop you have already reached using the route at the top. Your claims and progress on an unfinished tag are kept when you travel between stops. A full ride takes about 8 minutes.
 
 ## The 12 items
 

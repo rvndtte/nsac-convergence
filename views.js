@@ -7,14 +7,14 @@ export function starsView(count) {
   return html`<span class="stars" aria-label="${count} of ${MAX_STARS} stars">${Array.from({ length: MAX_STARS }, (_, index) => html`<span class="${index < count ? "star is-on" : "star"}" aria-hidden="true">★</span>`)}</span>`;
 }
 
-export function routeView({ stations, currentIndex, claims, itemsAt, free }) {
+export function routeView({ stations, currentIndex, furthestIndex, claims, itemsAt, canNavigate }) {
   return html`${stations.map((station, index) => {
     const items = itemsAt(station.id);
     const claimed = items.filter((item) => claims.has(item.id)).length;
-    const status = index === currentIndex ? "current" : index < currentIndex ? "past" : "ahead";
+    const status = index === currentIndex ? "current" : index <= furthestIndex ? "past" : "ahead";
     return html`
       <li class="route-stop" data-status="${status}">
-        <button class="route-button" type="button" data-action="station" data-index="${index}" aria-label="${station.name}" ${free ? "" : "disabled"}
+        <button class="route-button" type="button" data-action="station" data-index="${index}" aria-label="${station.name}" ${canNavigate && index <= furthestIndex && index !== currentIndex ? "" : "disabled"}
           aria-current="${index === currentIndex ? "step" : "false"}">
           <span class="route-dot" aria-hidden="true"></span>
           <span class="route-name">${station.name}</span>
