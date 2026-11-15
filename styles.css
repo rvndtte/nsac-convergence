@@ -359,6 +359,12 @@ body[data-mode="loading"] .route-nav {
   max-height: calc(100vh - var(--topbar) - 32px);
   max-height: calc(100dvh - var(--topbar) - 32px);
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.boarding::-webkit-scrollbar {
+  display: none;
 }
 
 .boarding h1 {
