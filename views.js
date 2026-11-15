@@ -14,7 +14,7 @@ export function routeView({ stations, currentIndex, claims, itemsAt, free }) {
     const status = index === currentIndex ? "current" : index < currentIndex ? "past" : "ahead";
     return html`
       <li class="route-stop" data-status="${status}">
-        <button class="route-button" type="button" data-action="station" data-index="${index}" ${free ? "" : "disabled"}
+        <button class="route-button" type="button" data-action="station" data-index="${index}" aria-label="${station.name}" ${free ? "" : "disabled"}
           aria-current="${index === currentIndex ? "step" : "false"}">
           <span class="route-dot" aria-hidden="true"></span>
           <span class="route-name">${station.name}</span>

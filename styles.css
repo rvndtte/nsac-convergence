@@ -1585,8 +1585,23 @@ body.no-3d .credits {
   }
 
   .topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
     padding: 0 6px 0 8px;
     gap: 4px;
+  }
+
+  .route-nav {
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .route {
+    width: max-content;
+  }
+
+  .route-nav::-webkit-scrollbar {
+    display: none;
   }
 
   .route-stop + .route-stop::before {
@@ -1753,6 +1768,20 @@ body.no-3d .credits {
   .marker-name {
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+}
+
+@media (max-width: 380px) {
+  .route-name {
+    display: none;
+  }
+
+  .route-button {
+    padding: 0 4px;
+  }
+
+  .route-stop + .route-stop::before {
+    width: 6px;
   }
 }
 
