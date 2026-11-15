@@ -61,6 +61,12 @@ python3 -m http.server 8000
 
 Then open <http://localhost:8000>. An internet connection is needed for Three.js (jsDelivr), fonts, and NASA data.
 
+## Continuous integration
+
+GitHub Actions runs on pull requests targeting `main` and on pushes to `main` or `security-check`. It checks JavaScript syntax, parses the project's JSON data, and runs CodeQL security analysis. This project has no package manifest or test/build scripts, so the workflow does not install dependencies or run a build.
+
+To prevent unvalidated pull requests from merging, configure a repository ruleset for `main` that requires the `Validate project` and `CodeQL security analysis` checks. This is a GitHub repository setting and is separate from the workflow files.
+
 ## Code layout
 
 | File | Role |
