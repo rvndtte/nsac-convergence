@@ -775,6 +775,7 @@ body:not([data-mode="stop"]):not([data-mode="record"]):not([data-mode="finale"])
   width: var(--tag-width);
   max-height: calc(100vh - var(--topbar) - 40px);
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tag-card {
@@ -910,6 +911,7 @@ body:not([data-mode="stop"]):not([data-mode="record"]):not([data-mode="finale"])
   border-radius: 14px;
   background: var(--surface-solid);
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   animation: slide-in 0.3s ease-out;
 }
 
@@ -1629,7 +1631,10 @@ body.no-3d .credits {
     left: 16px;
     width: auto;
     max-height: calc(100vh - var(--topbar) - 16px);
+    max-height: calc(100dvh - var(--topbar) - 16px);
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
     transform: none;
   }
 
@@ -1699,6 +1704,8 @@ body.no-3d .credits {
     border-radius: 16px 16px 0 0;
     background: var(--surface-solid);
     max-height: 48vh;
+    max-height: 48dvh;
+    touch-action: pan-y;
   }
 
   .scanner {
@@ -1728,8 +1735,10 @@ body.no-3d .credits {
 
   .panel {
     max-height: 64vh;
+    max-height: 64dvh;
     padding: 16px 16px 0;
     animation-name: rise;
+    touch-action: pan-y;
   }
 
   .record-title,
@@ -1919,7 +1928,10 @@ body:not(.no-3d) .scanner { top: auto; bottom: 72px; border-color: var(--accent)
   .hud-objective strong { color: var(--text-2); font: 400 11px/1.2 var(--mono); }
   .hud-progress { margin-top: 7px; height: 3px; }
   body:not(.no-3d) .scanner { top: calc(var(--topbar) + 105px); bottom: auto; }
-  .tag { max-height: 45vh; }
+  .tag {
+    max-height: 45vh;
+    max-height: 45dvh;
+  }
   .tag-card { box-shadow: none; }
   .tag-title { font-size: 20px; }
   .reticle-label { display: none; }
