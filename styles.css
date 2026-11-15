@@ -353,20 +353,12 @@ body[data-mode="loading"] .route-nav {
 .boarding {
   position: fixed;
   z-index: 10;
-  top: 50%;
+  top: calc(var(--topbar) + 16px);
   left: clamp(24px, 6vw, 96px);
   width: min(560px, 44vw);
-  transform: translateY(-50%);
-}
-
-@media (min-width: 900px) and (max-height: 860px) {
-  .boarding {
-    top: calc(var(--topbar) + 16px);
-    max-height: calc(100vh - var(--topbar) - 32px);
-    max-height: calc(100dvh - var(--topbar) - 32px);
-    overflow-y: auto;
-    transform: none;
-  }
+  max-height: calc(100vh - var(--topbar) - 32px);
+  max-height: calc(100dvh - var(--topbar) - 32px);
+  overflow-y: auto;
 }
 
 .boarding h1 {
